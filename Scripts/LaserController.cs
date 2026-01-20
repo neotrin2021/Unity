@@ -506,8 +506,30 @@ public class LaserController : MonoBehaviour
         // Rotation animation
         if (beam.rotationSpeed != Vector3.zero)
         {
-            Vector3 rotation = beam.originRotation + beam.rotationSpeed * time;
-            beamObj.transform.localRotation = Quaternion.Euler(rotation);
+            if (beam.beamType == LaserType.Line)
+            {
+                // For line beams, animate the endpoint to create scanning effect
+                LineRenderer lr = beamObj.GetComponent<LineRenderer>();
+                if (lr != null)
+                {
+                    // Calculate rotation angle
+                    Vector3 rotation = beam.originRotation + beam.rotationSpeed * time;
+                    Quaternion rot = Quaternion.Euler(rotation);
+
+                    // Rotate the direction vector
+                    Vector3 direction = rot * Vector3.forward;
+                    Vector3 endPoint = direction * beam.length;
+
+                    // Update line positions
+                    lr.SetPosition(1, endPoint);
+                }
+            }
+            else
+            {
+                // For fan beams, rotate the entire GameObject
+                Vector3 rotation = beam.originRotation + beam.rotationSpeed * time;
+                beamObj.transform.localRotation = Quaternion.Euler(rotation);
+            }
         }
 
         // Color pulsing
