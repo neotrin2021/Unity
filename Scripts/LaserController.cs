@@ -127,7 +127,11 @@ public class LaserController : MonoBehaviour
     {
         if (!isPreviewActive) return;
 
-        previewTime += Time.deltaTime * globalAnimationSpeed;
+        // Respect the enableAnimation checkbox in Edit mode too
+        if (enableAnimation)
+        {
+            previewTime += Time.deltaTime * globalAnimationSpeed;
+        }
 
         // Debug: Uncomment to verify animation loop is running
         // Debug.Log($"Preview Update - Time: {previewTime:F2}, DeltaTime: {Time.deltaTime:F4}");
@@ -136,7 +140,10 @@ public class LaserController : MonoBehaviour
         {
             if (beam.enabled && beamObjects.ContainsKey(beam))
             {
-                UpdateBeamAnimation(beam, previewTime);
+                if (enableAnimation)
+                {
+                    UpdateBeamAnimation(beam, previewTime);
+                }
                 UpdateBeamShaderProperties(beam);
             }
         }
@@ -434,6 +441,26 @@ public class LaserController : MonoBehaviour
         GameObject beamObj = beamObjects[beam];
         if (beamObj == null) return;
 
+        // Check if beam type changed - need to destroy and recreate
+        bool typeChanged = false;
+        if (beam.beamType == LaserType.Line && beamObj.GetComponent<LineRenderer>() == null)
+        {
+            typeChanged = true; // Was Fan, now Line
+        }
+        else if (beam.beamType == LaserType.Fan && beamObj.GetComponent<MeshFilter>() == null)
+        {
+            typeChanged = true; // Was Line, now Fan
+        }
+
+        if (typeChanged)
+        {
+            // Destroy old beam and create new one with correct type
+            DestroyBeamObject(beam);
+            CreateBeamObject(beam);
+            return;
+        }
+
+        // Type hasn't changed, just update properties
         if (beam.beamType == LaserType.Line)
         {
             LineRenderer lr = beamObj.GetComponent<LineRenderer>();
@@ -648,6 +675,10 @@ public class LaserController : MonoBehaviour
         mat.SetColor("_ColourB", beam.colorB);
         mat.SetFloat("_ColourValueMultiplier", beam.emissionIntensity);
 
+        // Set emission color as well for HDRP
+        mat.SetColor("_EmissiveColor", beam.colorA * beam.emissionIntensity);
+        mat.SetColor("_UnlitColor", beam.colorA * beam.emissionIntensity);
+
         // Alpha
         mat.SetFloat("_Alpha", beam.alpha);
 
@@ -655,6 +686,16 @@ public class LaserController : MonoBehaviour
         mat.SetFloat("_RadialMaskRadius", beam.radialMaskRadius);
         mat.SetFloat("_RadialMaskFeather", beam.radialMaskFeather);
         mat.SetFloat("_RadialMaskSubtractive", beam.radialMaskSubtractive ? 1f : 0f);
+
+        // Enable radial mask keyword
+        if (beam.radialMaskSubtractive)
+        {
+            mat.EnableKeyword("_RADIALMASKSUBTRACTIVE_ON");
+        }
+        else
+        {
+            mat.DisableKeyword("_RADIALMASKSUBTRACTIVE_ON");
+        }
 
         // Noise animation
         if (beam.enableNoise)
@@ -676,10 +717,12 @@ public class LaserController : MonoBehaviour
             mat.SetColor("_VerticalColourA", beam.verticalColorA);
             mat.SetColor("_VerticalColourB", beam.verticalColorB);
             mat.SetFloat("_VerticalColourValueMultiplier", beam.verticalColorIntensity);
+            mat.EnableKeyword("_VERTICALCOLOUR_ON");
         }
         else
         {
             mat.SetFloat("_VerticalColour", 0f);
+            mat.DisableKeyword("_VERTICALCOLOUR_ON");
         }
     }
 
