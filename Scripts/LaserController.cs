@@ -129,6 +129,9 @@ public class LaserController : MonoBehaviour
 
         previewTime += Time.deltaTime * globalAnimationSpeed;
 
+        // Debug: Uncomment to verify animation loop is running
+        // Debug.Log($"Preview Update - Time: {previewTime:F2}, DeltaTime: {Time.deltaTime:F4}");
+
         foreach (var beam in laserBeams)
         {
             if (beam.enabled && beamObjects.ContainsKey(beam))
@@ -290,7 +293,7 @@ public class LaserController : MonoBehaviour
 
         lineRenderer.numCornerVertices = 4;
         lineRenderer.numCapVertices = 4;
-        lineRenderer.alignment = LineAlignment.View;
+        lineRenderer.alignment = LineAlignment.TransformZ; // Use transform rotation instead of view-facing
         lineRenderer.textureMode = LineTextureMode.Stretch;
 
         // Disable shadows for better performance
@@ -500,11 +503,54 @@ public class LaserController : MonoBehaviour
         GameObject beamObj = beamObjects[beam];
         if (beamObj == null) return;
 
-        // Rotation animation
-        if (beam.rotationSpeed != Vector3.zero)
+        // Handle different animation types
+        if (beam.animationType == AnimationType.Rotation && beam.rotationSpeed != Vector3.zero)
         {
-            Vector3 rotation = beam.originRotation + beam.rotationSpeed * time;
-            beamObj.transform.localRotation = Quaternion.Euler(rotation);
+            // Rotation animation (sweeping)
+            if (beam.beamType == LaserType.Line)
+            {
+                // For line beams, animate the endpoint to create scanning effect
+                LineRenderer lr = beamObj.GetComponent<LineRenderer>();
+                if (lr != null)
+                {
+                    // Calculate rotation angle
+                    Vector3 rotation = beam.originRotation + beam.rotationSpeed * time;
+                    Quaternion rot = Quaternion.Euler(rotation);
+
+                    // Rotate the direction vector
+                    Vector3 direction = rot * Vector3.forward;
+                    Vector3 endPoint = direction * beam.length;
+
+                    // Update line positions
+                    lr.SetPosition(1, endPoint);
+                }
+            }
+            else
+            {
+                // For fan beams, rotate the entire GameObject
+                Vector3 rotation = beam.originRotation + beam.rotationSpeed * time;
+                beamObj.transform.localRotation = Quaternion.Euler(rotation);
+            }
+        }
+        else if (beam.animationType == AnimationType.Circle)
+        {
+            // Circular animation (tip traces a circle)
+            if (beam.beamType == LaserType.Line)
+            {
+                LineRenderer lr = beamObj.GetComponent<LineRenderer>();
+                if (lr != null)
+                {
+                    // Calculate angle in radians
+                    float angle = (time * beam.circleSpeed) * Mathf.Deg2Rad;
+
+                    // Calculate position on circle based on plane
+                    Vector3 circlePoint = CalculateCirclePoint(beam.circleCenter, beam.circleRadius, angle, beam.circlePlane);
+
+                    // Point laser at the circle point
+                    lr.SetPosition(1, beamObj.transform.InverseTransformPoint(beamObj.transform.TransformPoint(circlePoint)));
+                }
+            }
+            // Note: Circle animation doesn't make sense for fan beams, so we skip them
         }
 
         // Color pulsing
@@ -518,6 +564,40 @@ public class LaserController : MonoBehaviour
                 beamMaterials[beam].SetColor("_ColourA", currentColor);
             }
         }
+    }
+
+    private Vector3 CalculateCirclePoint(Vector3 center, float radius, float angle, CirclePlane plane)
+    {
+        Vector3 point = Vector3.zero;
+
+        switch (plane)
+        {
+            case CirclePlane.XY: // Vertical circle facing forward
+                point = new Vector3(
+                    Mathf.Cos(angle) * radius,
+                    Mathf.Sin(angle) * radius,
+                    0
+                );
+                break;
+
+            case CirclePlane.XZ: // Horizontal circle (floor)
+                point = new Vector3(
+                    Mathf.Cos(angle) * radius,
+                    0,
+                    Mathf.Sin(angle) * radius
+                );
+                break;
+
+            case CirclePlane.YZ: // Vertical circle facing sideways
+                point = new Vector3(
+                    0,
+                    Mathf.Sin(angle) * radius,
+                    Mathf.Cos(angle) * radius
+                );
+                break;
+        }
+
+        return center + point;
     }
 
     private void UpdateBeamShaderProperties(LaserBeam beam)
@@ -615,9 +695,34 @@ public class LaserBeam
     [Range(0f, 5f)] public float noisePower = 0.5f;
 
     [Header("Animation")]
+    public AnimationType animationType = AnimationType.None;
+
+    [Header("Rotation Animation (Sweeping)")]
     public Vector3 rotationSpeed = Vector3.zero;
+
+    [Header("Circular Animation (Traces a Circle)")]
+    public Vector3 circleCenter = new Vector3(0, 0, 10); // Where the circle is in space
+    [Range(0.1f, 20f)] public float circleRadius = 3f; // Size of the circle
+    [Range(1f, 360f)] public float circleSpeed = 60f; // Degrees per second
+    public CirclePlane circlePlane = CirclePlane.XY; // Which plane to draw circle on
+
+    [Header("Color Pulse")]
     public bool enableColorPulse = false;
     [Range(0.1f, 10f)] public float colorPulseSpeed = 2f;
+}
+
+public enum AnimationType
+{
+    None,
+    Rotation, // Sweeps around (like current behavior)
+    Circle    // Tip traces a circle
+}
+
+public enum CirclePlane
+{
+    XY, // Vertical circle facing forward
+    XZ, // Horizontal circle (like drawing on floor)
+    YZ  // Vertical circle facing sideways
 }
 
 public enum LaserType
