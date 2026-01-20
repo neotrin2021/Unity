@@ -129,6 +129,9 @@ public class LaserController : MonoBehaviour
 
         previewTime += Time.deltaTime * globalAnimationSpeed;
 
+        // Debug: Uncomment to verify animation loop is running
+        // Debug.Log($"Preview Update - Time: {previewTime:F2}, DeltaTime: {Time.deltaTime:F4}");
+
         foreach (var beam in laserBeams)
         {
             if (beam.enabled && beamObjects.ContainsKey(beam))
