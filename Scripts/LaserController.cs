@@ -149,6 +149,25 @@ public class LaserController : MonoBehaviour
 
     #region Unity Lifecycle
 
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        // Called when any value changes in the Inspector
+        // Refresh all beams to reflect changes in real-time
+        if (isPreviewActive)
+        {
+            // Delay the refresh slightly to ensure all inspector changes are applied
+            EditorApplication.delayCall += () =>
+            {
+                if (this != null && isPreviewActive)
+                {
+                    RefreshAllLasers();
+                }
+            };
+        }
+    }
+#endif
+
     private void Update()
     {
         if (!Application.isPlaying) return;
