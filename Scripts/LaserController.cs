@@ -546,8 +546,8 @@ public class LaserController : MonoBehaviour
                     // Calculate position on circle based on plane
                     Vector3 circlePoint = CalculateCirclePoint(beam.circleCenter, beam.circleRadius, angle, beam.circlePlane);
 
-                    // Point laser at the circle point
-                    lr.SetPosition(1, beamObj.transform.InverseTransformPoint(beamObj.transform.TransformPoint(circlePoint)));
+                    // Point laser at the circle point (circlePoint is already in local space)
+                    lr.SetPosition(1, circlePoint);
                 }
             }
             // Note: Circle animation doesn't make sense for fan beams, so we skip them
