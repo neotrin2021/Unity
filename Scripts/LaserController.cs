@@ -288,7 +288,9 @@ public class LaserController : MonoBehaviour
         }
 
         lineRenderer.positionCount = 2;
-        // Start point uses originPosition
+        lineRenderer.useWorldSpace = true; // Use world space coordinates like SimpleLineTest
+
+        // Start point uses originPosition (in world space)
         lineRenderer.SetPosition(0, beam.originPosition);
         // End point calculates from originPosition + direction based on originRotation
         Quaternion rotation = Quaternion.Euler(beam.originRotation);
