@@ -252,8 +252,8 @@ public class LaserController : MonoBehaviour
 
         GameObject beamObj = new GameObject($"Laser_{beam.beamType}_{beamIds[beam]}");
         beamObj.transform.SetParent(transform);
-        beamObj.transform.localPosition = Vector3.zero; // Keep GameObject at controller position
-        beamObj.transform.localRotation = Quaternion.identity; // No rotation on GameObject
+        beamObj.transform.localPosition = beam.originPosition;
+        beamObj.transform.localRotation = Quaternion.Euler(beam.originRotation);
 
         // Create material instance
         if (laserMaterial != null && !beamMaterials.ContainsKey(beam))
@@ -268,9 +268,6 @@ public class LaserController : MonoBehaviour
         }
         else if (beam.beamType == LaserType.Fan)
         {
-            // Fan beams use GameObject transform for positioning
-            beamObj.transform.localPosition = beam.originPosition;
-            beamObj.transform.localRotation = Quaternion.Euler(beam.originRotation);
             CreateFanBeam(beamObj, beam);
         }
 
@@ -288,12 +285,8 @@ public class LaserController : MonoBehaviour
         }
 
         lineRenderer.positionCount = 2;
-        // Start point uses originPosition
-        lineRenderer.SetPosition(0, beam.originPosition);
-        // End point calculates from originPosition + direction based on originRotation
-        Quaternion rotation = Quaternion.Euler(beam.originRotation);
-        Vector3 direction = rotation * Vector3.forward;
-        lineRenderer.SetPosition(1, beam.originPosition + direction * beam.length);
+        lineRenderer.SetPosition(0, Vector3.zero);
+        lineRenderer.SetPosition(1, Vector3.forward * beam.length);
 
         // Width curve - thicker at base, thinner at tip
         lineRenderer.widthCurve = CreateWidthCurve(beam);
@@ -413,27 +406,21 @@ public class LaserController : MonoBehaviour
         GameObject beamObj = beamObjects[beam];
         if (beamObj == null) return;
 
+        // Update transform
+        beamObj.transform.localPosition = beam.originPosition;
+        beamObj.transform.localRotation = Quaternion.Euler(beam.originRotation);
+
         if (beam.beamType == LaserType.Line)
         {
             LineRenderer lr = beamObj.GetComponent<LineRenderer>();
             if (lr != null)
             {
-                // Update start point
-                lr.SetPosition(0, beam.originPosition);
-                // Update end point based on originRotation
-                Quaternion rotation = Quaternion.Euler(beam.originRotation);
-                Vector3 direction = rotation * Vector3.forward;
-                lr.SetPosition(1, beam.originPosition + direction * beam.length);
-                // Update width curve
+                lr.SetPosition(1, Vector3.forward * beam.length);
                 lr.widthCurve = CreateWidthCurve(beam);
             }
         }
         else if (beam.beamType == LaserType.Fan)
         {
-            // For fan beams, update transform and regenerate mesh
-            beamObj.transform.localPosition = beam.originPosition;
-            beamObj.transform.localRotation = Quaternion.Euler(beam.originRotation);
-
             MeshFilter mf = beamObj.GetComponent<MeshFilter>();
             if (mf != null)
             {
@@ -532,10 +519,9 @@ public class LaserController : MonoBehaviour
 
                     // Rotate the direction vector
                     Vector3 direction = rot * Vector3.forward;
-                    Vector3 endPoint = beam.originPosition + direction * beam.length;
+                    Vector3 endPoint = direction * beam.length;
 
-                    // Update line positions (start point stays at originPosition)
-                    lr.SetPosition(0, beam.originPosition);
+                    // Update line positions
                     lr.SetPosition(1, endPoint);
                 }
             }
@@ -560,8 +546,8 @@ public class LaserController : MonoBehaviour
                     // Calculate position on circle based on plane
                     Vector3 circlePoint = CalculateCirclePoint(beam.circleCenter, beam.circleRadius, angle, beam.circlePlane);
 
-                    // Update line positions (start at originPosition, end at circle point)
-                    lr.SetPosition(0, beam.originPosition);
+                    // Point laser at the circle point
+                    // lr.SetPosition(1, beamObj.transform.InverseTransformPoint(beamObj.transform.TransformPoint(circlePoint)));
                     lr.SetPosition(1, circlePoint);
                 }
             }
