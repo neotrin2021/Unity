@@ -518,17 +518,6 @@ public class LaserController : MonoBehaviour
         GameObject beamObj = beamObjects[beam];
         if (beamObj == null) return;
 
-        // For line beams, always ensure start point stays at origin position
-        if (beam.beamType == LaserType.Line)
-        {
-            LineRenderer lr = beamObj.GetComponent<LineRenderer>();
-            if (lr != null)
-            {
-                // Lock start point to originPosition (club laser emitters never move)
-                lr.SetPosition(0, beam.originPosition);
-            }
-        }
-
         // Handle different animation types
         if (beam.animationType == AnimationType.Rotation && beam.rotationSpeed != Vector3.zero)
         {
@@ -547,7 +536,8 @@ public class LaserController : MonoBehaviour
                     Vector3 direction = rot * Vector3.forward;
                     Vector3 endPoint = beam.originPosition + direction * beam.length;
 
-                    // Update endpoint (start point already locked above)
+                    // Update line positions (start point stays at originPosition)
+                    lr.SetPosition(0, beam.originPosition);
                     lr.SetPosition(1, endPoint);
                 }
             }
@@ -572,27 +562,12 @@ public class LaserController : MonoBehaviour
                     // Calculate position on circle based on plane
                     Vector3 circlePoint = CalculateCirclePoint(beam.circleCenter, beam.circleRadius, angle, beam.circlePlane);
 
-                    // Update endpoint to trace circle (start point already locked above)
+                    // Update line positions (start at originPosition, end at circle point)
+                    lr.SetPosition(0, beam.originPosition);
                     lr.SetPosition(1, circlePoint);
                 }
             }
             // Note: Circle animation doesn't make sense for fan beams, so we skip them
-        }
-        else if (beam.animationType == AnimationType.None)
-        {
-            // No animation - static beam
-            if (beam.beamType == LaserType.Line)
-            {
-                LineRenderer lr = beamObj.GetComponent<LineRenderer>();
-                if (lr != null)
-                {
-                    // Static beam pointing based on originRotation
-                    Quaternion rotation = Quaternion.Euler(beam.originRotation);
-                    Vector3 direction = rotation * Vector3.forward;
-                    Vector3 endPoint = beam.originPosition + direction * beam.length;
-                    lr.SetPosition(1, endPoint);
-                }
-            }
         }
 
         // Color pulsing
