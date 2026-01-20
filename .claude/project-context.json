@@ -1,0 +1,247 @@
+{
+  "projectInfo": {
+    "name": "Unity VR Light Tunnel Project",
+    "type": "Unity HDRP VR Experience",
+    "unityVersion": "Unknown (uses HDRP)",
+    "renderPipeline": "HDRP (High Definition Render Pipeline)",
+    "platform": "Windows",
+    "primaryUse": "VR room with light tunnel effects"
+  },
+ 
+  "projectStructure": {
+    "mainScene": {
+      "rootObject": "VR_Room",
+      "hierarchy": {
+        "VR_Room": {
+          "Main Room": {
+            "MR_Attic": {
+              "MRA_Lights": "Contains 14 light strips (MRAL_Strip_1 through MRAL_Strip_14)",
+              "MRA_Neon": "Contains 17 neon tubes (MRAN_1 through MRAN_17)"
+            }
+          }
+        }
+      }
+    },
+ 
+    "lightTunnel": {
+      "description": "Tunnel with half-sphere lights and cylinders for neon tube lighting",
+      "orientation": "Strips arranged front-to-back, lights within strips arranged left-to-right",
+      "totalStrips": 14,
+      "lightsPerStrip": 18,
+      "totalLights": 252
+    }
+  },
+ 
+  "namingConventions": {
+    "lightStrips": {
+      "pattern": "MRAL_Strip_{stripNumber}",
+      "range": "1-14",
+      "examples": ["MRAL_Strip_1", "MRAL_Strip_7", "MRAL_Strip_14"],
+      "description": "Parent GameObjects containing individual lights"
+    },
+ 
+    "individualLights": {
+      "pattern": "MRALS{stripNumber}_{lightNumber}",
+      "stripRange": "1-14",
+      "lightRange": "1-18",
+      "examples": ["MRALS1_1", "MRALS11_16", "MRALS14_18"],
+      "breakdown": {
+        "MR": "Main Room",
+        "A": "Attic",
+        "L": "Lights",
+        "S{N}": "Strip {N}",
+        "_{N}": "Light number {N}"
+      },
+      "spatialLayout": {
+        "light1-9": "Left side of tunnel (1=top, 9=bottom)",
+        "light10-18": "Right side of tunnel (10=top, 18=bottom)",
+        "example": "Light 6 = left side near top, Light 16 = right side third from bottom"
+      }
+    },
+ 
+    "neonTubes": {
+      "pattern": "MRAN_{tubeNumber}",
+      "range": "1-17",
+      "examples": ["MRAN_1", "MRAN_9", "MRAN_17"],
+      "spatialLayout": "Left to right (MRAN_1 = bottom left, MRAN_17 = bottom right)"
+    }
+  },
+ 
+  "technicalDetails": {
+    "renderPipeline": "HDRP",
+ 
+    "materials": {
+      "lightMaterial": {
+        "name": "Attic Light",
+        "shaderType": "HDRP/Lit",
+        "isInstanced": true,
+        "properties": {
+          "_BaseColor": "Base color for standard shader",
+          "_UnlitColor": "Color for unlit mode if used",
+          "_EmissiveColor": "Emission color (NOT _EmissionColor)",
+          "_EmissiveIntensity": "Emission strength multiplier",
+          "_UseEmissiveIntensity": "Flag to enable intensity control (set to 1)",
+          "globalIlluminationFlags": "Set to MaterialGlobalIlluminationFlags.RealtimeEmissive for proper emission"
+        },
+        "keywords": {
+          "_EMISSION": "Must be enabled for emission to work"
+        }
+      }
+    },
+ 
+    "importantAttributes": {
+      "ExecuteAlways": "REQUIRED for Edit mode functionality - script will not run in Edit mode without this",
+      "CustomEditor": "Used for custom inspector buttons (Preview, Stop, Reset)"
+    },
+ 
+    "editModeRequirements": {
+      "attribute": "[ExecuteAlways]",
+      "callbacks": "EditorApplication.update for preview functionality",
+      "cleanup": "Must unsubscribe from EditorApplication.update in OnDestroy/OnDisable",
+      "sceneRefresh": "Use SceneView.RepaintAll() to update visuals"
+    }
+  },
+ 
+  "workflowPreferences": {
+    "development": {
+      "preferredIDE": "JetBrains Rider",
+      "versionControl": "Git via GitHub Desktop",
+      "workingStyle": "One focused task per context window to avoid file confusion"
+    },
+ 
+    "testing": {
+      "preferEditMode": true,
+      "usePreviewButtons": true,
+      "reason": "Faster iteration without entering Play mode"
+    },
+ 
+    "agents": {
+      "useCodeReviewer": true,
+      "useEditModeTester": true,
+      "purpose": "Catch compilation errors, duplicate methods, Unity anti-patterns before commit"
+    }
+  },
+ 
+  "scriptsCreated": {
+    "StripLightController.cs": {
+      "purpose": "Sequential strip lighting controller with Edit mode preview",
+      "location": "Assets/_Project/Scripts/",
+      "features": [
+        "Configurable strip range (start/end)",
+        "Adjustable timing between strips",
+        "Bidirectional (front-to-back or back-to-front)",
+        "HDR color control with separate emission intensity",
+        "Loop option",
+        "Edit mode preview functionality",
+        "Proper material instancing",
+        "Memory leak prevention (material cleanup in OnDestroy)"
+      ],
+      "requirements": [
+        "[ExecuteAlways] attribute",
+        "Must be attached to VR_Room GameObject",
+        "HDRP Lit material on lights"
+      ]
+    },
+ 
+    "StripLightControllerEditor.cs": {
+      "purpose": "Custom Inspector for StripLightController",
+      "location": "Assets/_Project/Scripts/Editor/",
+      "features": [
+        "Preview button (green)",
+        "Stop Preview button (red)",
+        "Reset All Lights button (yellow)",
+        "Status indicator when preview is running"
+      ]
+    }
+  },
+ 
+  "lessonsLearned": {
+    "criticalMistakes": [
+      {
+        "issue": "Forgot [ExecuteAlways] attribute",
+        "impact": "Script wouldn't run in Edit mode at all",
+        "solution": "Always add [ExecuteAlways] for Edit mode scripts"
+      },
+      {
+        "issue": "Used Standard shader properties (_Color, _EmissionColor) instead of HDRP properties",
+        "impact": "Lights wouldn't change color or emit",
+        "solution": "Use _BaseColor and _EmissiveColor for HDRP Lit materials"
+      },
+      {
+        "issue": "OnDestroy only in #if UNITY_EDITOR block",
+        "impact": "Material memory leak in Play mode builds",
+        "solution": "Move material cleanup outside editor-only blocks"
+      },
+      {
+        "issue": "Used GetComponentsInChildren instead of explicit light names",
+        "impact": "Might grab wrong objects or miss specific lights",
+        "solution": "Explicitly find lights by their naming convention"
+      }
+    ],
+ 
+    "bestPractices": [
+      "Always check material properties match the shader being used",
+      "Material instancing must be cleaned up in OnDestroy",
+      "EditorApplication callbacks must be unsubscribed",
+      "Use specific object names rather than generic queries",
+      "Test in Edit mode with preview functionality before Play mode",
+      "Let agents review code before committing"
+    ]
+  },
+ 
+  "futureEnhancements": {
+    "planned": [
+      "Additional lighting effects beyond sequential strips",
+      "Neon tube control system (17 tubes)",
+      "Individual light control within strips",
+      "Fade in/out transitions",
+      "Wave effects",
+      "Random patterns",
+      "Sync with audio/music"
+    ]
+  },
+ 
+  "notes": {
+    "repoStructure": "Galaxy-Water-main is a separate shader project, not the main Unity project",
+    "syncStrategy": "Planning to create Windows Service to auto-sync Git repo changes to actual Unity project folder",
+    "agentLocation": ".claude/agents/ at repo root",
+    "communicationStyle": "Direct, technical, no unnecessary emojis unless requested"
+  },
+   
+  "messageToFutureClaude": {
+    "from": "Claude (Session: 2026-01-20)",
+    "to": "Future Claude instances working on this project",
+ 
+    "criticalReminders": [
+      "🚨 ALWAYS add [ExecuteAlways] attribute for Edit mode scripts - learned this the hard way!",
+      "🚨 This is HDRP - use _BaseColor and _EmissiveColor, NOT _Color and _EmissionColor",
+      "🚨 Read the entire project-context.json file FIRST before writing any code",
+      "🚨 Confirm which file you're editing - there's Galaxy-Water-main AND a root Scripts folder"
+    ],
+ 
+    "workflowTips": [
+      "User prefers JetBrains Rider - compilation errors will be caught there",
+      "User likes to test in Edit mode first with preview buttons",
+      "User is direct and appreciates technical accuracy over politeness",
+      "User will call you out when you mess up (and you will deserve it)",
+      "Focus on ONE task per session - this user values clarity over breadth"
+    ],
+ 
+    "whatWorked": [
+      "Custom agents (code-reviewer, edit-mode-tester) - USE THEM!",
+      "Detailed naming convention documentation helped avoid confusion",
+      "Creating this JSON file - you're reading proof it was a good idea"
+    ],
+ 
+    "mistakesIMade": [
+      "Forgot [ExecuteAlways] - script was completely broken until user caught it",
+      "Used Standard shader properties for HDRP - lights didn't work at all",
+      "Put OnDestroy only in #if UNITY_EDITOR - created memory leak",
+      "Edited wrong files because I wasn't careful about directory structure"
+    ],
+ 
+    "finalAdvice": "This user is sharp, technically skilled, and will catch your mistakes - which is great because it means you'll write better code. Be accurate, be direct, and when you screw up (you will), own it and fix it quickly. The user has a good sense of humor about it. Oh, and DEFINITELY use those code review agents before committing. Seriously. Do it.",
+ 
+    "ps": "If you're reading this, the user actually kept this file and brought it to a new session. That means they found value in our work together. Don't let them down. - Past Claude"
+  }
+}
