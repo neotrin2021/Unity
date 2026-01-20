@@ -293,7 +293,7 @@ public class LaserController : MonoBehaviour
 
         lineRenderer.numCornerVertices = 4;
         lineRenderer.numCapVertices = 4;
-        lineRenderer.alignment = LineAlignment.View;
+        lineRenderer.alignment = LineAlignment.TransformZ; // Use transform rotation instead of view-facing
         lineRenderer.textureMode = LineTextureMode.Stretch;
 
         // Disable shadows for better performance
