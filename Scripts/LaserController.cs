@@ -127,7 +127,11 @@ public class LaserController : MonoBehaviour
     {
         if (!isPreviewActive) return;
 
-        previewTime += Time.deltaTime * globalAnimationSpeed;
+        // Respect the enableAnimation checkbox in Edit mode too
+        if (enableAnimation)
+        {
+            previewTime += Time.deltaTime * globalAnimationSpeed;
+        }
 
         // Debug: Uncomment to verify animation loop is running
         // Debug.Log($"Preview Update - Time: {previewTime:F2}, DeltaTime: {Time.deltaTime:F4}");
@@ -136,7 +140,10 @@ public class LaserController : MonoBehaviour
         {
             if (beam.enabled && beamObjects.ContainsKey(beam))
             {
-                UpdateBeamAnimation(beam, previewTime);
+                if (enableAnimation)
+                {
+                    UpdateBeamAnimation(beam, previewTime);
+                }
                 UpdateBeamShaderProperties(beam);
             }
         }
@@ -148,6 +155,25 @@ public class LaserController : MonoBehaviour
     #endregion
 
     #region Unity Lifecycle
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        // Called when any value changes in the Inspector
+        // Refresh all beams to reflect changes in real-time
+        if (isPreviewActive)
+        {
+            // Delay the refresh slightly to ensure all inspector changes are applied
+            EditorApplication.delayCall += () =>
+            {
+                if (this != null && isPreviewActive)
+                {
+                    RefreshAllLasers();
+                }
+            };
+        }
+    }
+#endif
 
     private void Update()
     {
@@ -285,15 +311,21 @@ public class LaserController : MonoBehaviour
         }
 
         lineRenderer.positionCount = 2;
-        lineRenderer.SetPosition(0, Vector3.zero);
-        lineRenderer.SetPosition(1, Vector3.forward * beam.length);
+        lineRenderer.useWorldSpace = true; // Use world space coordinates like SimpleLineTest
+
+        // Start point uses originPosition (in world space)
+        lineRenderer.SetPosition(0, beam.originPosition);
+        // End point calculates from originPosition + direction based on originRotation
+        Quaternion rotation = Quaternion.Euler(beam.originRotation);
+        Vector3 direction = rotation * Vector3.forward;
+        lineRenderer.SetPosition(1, beam.originPosition + direction * beam.length);
 
         // Width curve - thicker at base, thinner at tip
         lineRenderer.widthCurve = CreateWidthCurve(beam);
 
         lineRenderer.numCornerVertices = 4;
         lineRenderer.numCapVertices = 4;
-        lineRenderer.alignment = LineAlignment.TransformZ; // Use transform rotation instead of view-facing
+        lineRenderer.alignment = LineAlignment.View; // Always face camera so visible from any angle
         lineRenderer.textureMode = LineTextureMode.Stretch;
 
         // Disable shadows for better performance
@@ -406,10 +438,26 @@ public class LaserController : MonoBehaviour
         GameObject beamObj = beamObjects[beam];
         if (beamObj == null) return;
 
-        // Update transform
-        beamObj.transform.localPosition = beam.originPosition;
-        beamObj.transform.localRotation = Quaternion.Euler(beam.originRotation);
+        // Check if beam type changed - need to destroy and recreate
+        bool typeChanged = false;
+        if (beam.beamType == LaserType.Line && beamObj.GetComponent<LineRenderer>() == null)
+        {
+            typeChanged = true; // Was Fan, now Line
+        }
+        else if (beam.beamType == LaserType.Fan && beamObj.GetComponent<MeshFilter>() == null)
+        {
+            typeChanged = true; // Was Line, now Fan
+        }
 
+        if (typeChanged)
+        {
+            // Destroy old beam and create new one with correct type
+            DestroyBeamObject(beam);
+            CreateBeamObject(beam);
+            return;
+        }
+
+        // Type hasn't changed, just update properties
         if (beam.beamType == LaserType.Line)
         {
             LineRenderer lr = beamObj.GetComponent<LineRenderer>();
@@ -613,6 +661,10 @@ public class LaserController : MonoBehaviour
         mat.SetColor("_ColourB", beam.colorB);
         mat.SetFloat("_ColourValueMultiplier", beam.emissionIntensity);
 
+        // Set emission color as well for HDRP
+        mat.SetColor("_EmissiveColor", beam.colorA * beam.emissionIntensity);
+        mat.SetColor("_UnlitColor", beam.colorA * beam.emissionIntensity);
+
         // Alpha
         mat.SetFloat("_Alpha", beam.alpha);
 
@@ -620,6 +672,16 @@ public class LaserController : MonoBehaviour
         mat.SetFloat("_RadialMaskRadius", beam.radialMaskRadius);
         mat.SetFloat("_RadialMaskFeather", beam.radialMaskFeather);
         mat.SetFloat("_RadialMaskSubtractive", beam.radialMaskSubtractive ? 1f : 0f);
+
+        // Enable radial mask keyword
+        if (beam.radialMaskSubtractive)
+        {
+            mat.EnableKeyword("_RADIALMASKSUBTRACTIVE_ON");
+        }
+        else
+        {
+            mat.DisableKeyword("_RADIALMASKSUBTRACTIVE_ON");
+        }
 
         // Noise animation
         if (beam.enableNoise)
@@ -641,10 +703,12 @@ public class LaserController : MonoBehaviour
             mat.SetColor("_VerticalColourA", beam.verticalColorA);
             mat.SetColor("_VerticalColourB", beam.verticalColorB);
             mat.SetFloat("_VerticalColourValueMultiplier", beam.verticalColorIntensity);
+            mat.EnableKeyword("_VERTICALCOLOUR_ON");
         }
         else
         {
             mat.SetFloat("_VerticalColour", 0f);
+            mat.DisableKeyword("_VERTICALCOLOUR_ON");
         }
     }
 
@@ -656,60 +720,72 @@ public class LaserController : MonoBehaviour
 [System.Serializable]
 public class LaserBeam
 {
-    [Header("Basic Settings")]
+    [Header("=== BASIC SETTINGS (Both Line & Fan) ===")]
     public bool enabled = true;
     public LaserType beamType = LaserType.Line;
     public string beamName = "Laser";
 
-    [Header("Transform")]
+    [Header("=== TRANSFORM (Both Line & Fan) ===")]
     public Vector3 originPosition = Vector3.zero;
     public Vector3 originRotation = Vector3.zero;
     public float length = 10f;
     public float width = 0.1f;
     [Range(0f, 1f)] public float tipWidthMultiplier = 0.5f;
 
-    [Header("Fan Settings (Fan Type Only)")]
+    [Header("=== FAN-ONLY SETTINGS ===")]
+    [Tooltip("Number of rays in the fan (Fan type only)")]
     [Range(3, 50)] public int fanRayCount = 10;
+    [Tooltip("Spread angle of the fan in degrees (Fan type only)")]
     [Range(1f, 180f)] public float fanSpreadAngle = 45f;
 
-    [Header("Color")]
+    [Header("=== LINE-ONLY ANIMATION ===")]
+    [Tooltip("Animation type (Line type only - Fan doesn't support animation yet)")]
+    public AnimationType animationType = AnimationType.None;
+
+    [Space(5)]
+    [Tooltip("Rotation animation - sweeping motion (Line type only)")]
+    public Vector3 rotationSpeed = Vector3.zero;
+
+    [Space(5)]
+    [Tooltip("Circle animation - where in 3D space the circle center is (Line type only)")]
+    public Vector3 circleCenter = new Vector3(0, 0, 10);
+    [Tooltip("Radius of the circle the laser tip traces (Line type only)")]
+    [Range(0.1f, 20f)] public float circleRadius = 3f;
+    [Tooltip("Speed of circular motion in degrees/second (Line type only)")]
+    [Range(1f, 360f)] public float circleSpeed = 60f;
+    [Tooltip("Which plane to draw the circle on (Line type only)")]
+    public CirclePlane circlePlane = CirclePlane.XY;
+
+    [Header("=== COLOR & EMISSION (Both Line & Fan) ===")]
     [ColorUsage(true, true)] public Color colorA = new Color(1f, 0.1f, 0f, 1f);
     [ColorUsage(true, true)] public Color colorB = new Color(1f, 0.5f, 0f, 1f);
     [Range(0f, 20f)] public float emissionIntensity = 5f;
     [Range(0f, 1f)] public float alpha = 1f;
 
-    [Header("Vertical Color (Gradient)")]
+    [Header("=== VERTICAL COLOR GRADIENT (Both Line & Fan) ===")]
     public bool enableVerticalColor = false;
     [ColorUsage(true, true)] public Color verticalColorA = new Color(1f, 1f, 1f, 1f);
     [ColorUsage(true, true)] public Color verticalColorB = new Color(0.5f, 0.5f, 1f, 1f);
     [Range(0f, 20f)] public float verticalColorIntensity = 5f;
 
-    [Header("Radial Mask (Beam Appearance)")]
+    [Header("=== COLOR PULSE (Both Line & Fan) ===")]
+    public bool enableColorPulse = false;
+    [Range(0.1f, 10f)] public float colorPulseSpeed = 2f;
+
+    [Header("=== RADIAL MASK (Both Line & Fan) ===")]
+    [Tooltip("Controls how wide the beam appears")]
     [Range(0f, 1f)] public float radialMaskRadius = 0.8f;
+    [Tooltip("Edge softness of the beam")]
     [Range(0f, 2f)] public float radialMaskFeather = 1f;
+    [Tooltip("Subtractive mode creates cleaner edges")]
     public bool radialMaskSubtractive = true;
 
-    [Header("Noise")]
+    [Header("=== NOISE (Both Line & Fan) ===")]
     public bool enableNoise = true;
+    [Tooltip("X=horizontal, Y=vertical, Z=speed, W=unused")]
     public Vector4 noiseAnimation = new Vector4(0f, 4f, 1f, 0f);
     [Range(0.1f, 10f)] public float noiseScale = 2f;
     [Range(0f, 5f)] public float noisePower = 0.5f;
-
-    [Header("Animation")]
-    public AnimationType animationType = AnimationType.None;
-
-    [Header("Rotation Animation (Sweeping)")]
-    public Vector3 rotationSpeed = Vector3.zero;
-
-    [Header("Circular Animation (Traces a Circle)")]
-    public Vector3 circleCenter = new Vector3(0, 0, 10); // Where the circle is in space
-    [Range(0.1f, 20f)] public float circleRadius = 3f; // Size of the circle
-    [Range(1f, 360f)] public float circleSpeed = 60f; // Degrees per second
-    public CirclePlane circlePlane = CirclePlane.XY; // Which plane to draw circle on
-
-    [Header("Color Pulse")]
-    public bool enableColorPulse = false;
-    [Range(0.1f, 10f)] public float colorPulseSpeed = 2f;
 }
 
 public enum AnimationType
