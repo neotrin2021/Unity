@@ -152,6 +152,46 @@
         "Reset All Lights button (yellow)",
         "Status indicator when preview is running"
       ]
+    },
+
+    "LaserController.cs": {
+      "purpose": "Comprehensive club laser system with line beams and fan effects",
+      "location": "Scripts/",
+      "features": [
+        "Line and Fan beam types",
+        "World space coordinate system for positioning",
+        "Multiple animation types (None, Rotation, Circle)",
+        "Circular motion with configurable plane (XY, XZ, YZ)",
+        "Edit mode preview with real-time inspector updates via OnValidate",
+        "HDR color control with emission intensity",
+        "Color pulsing animation",
+        "Vertical color gradients along beam length",
+        "Noise animation effects",
+        "Radial mask for beam width control",
+        "Type-safe beam switching (auto-recreates on type change)",
+        "Material instancing per beam",
+        "Proper cleanup in OnDestroy"
+      ],
+      "requirements": [
+        "[ExecuteAlways] attribute for Edit mode functionality",
+        "MirzaConverted shader material for volumetric laser appearance",
+        "Uses LineRenderer for Line beams, MeshFilter/MeshRenderer for Fan beams"
+      ],
+      "technicalNotes": [
+        "LineRenderer uses world space coordinates (useWorldSpace = true)",
+        "Start/end positions calculated from originPosition + rotation-based direction",
+        "RefreshBeamObject checks for type changes and recreates geometry if needed",
+        "Each beam gets unique ID for naming GameObjects"
+      ]
+    },
+
+    "SimpleLineTest.cs": {
+      "purpose": "Debugging utility for testing LineRenderer positioning",
+      "location": "Scripts/",
+      "features": [
+        "Simple two-point line for verifying world space coordinates",
+        "Used to validate LineRenderer behavior during development"
+      ]
     }
   },
  
@@ -176,6 +216,16 @@
         "issue": "Used GetComponentsInChildren instead of explicit light names",
         "impact": "Might grab wrong objects or miss specific lights",
         "solution": "Explicitly find lights by their naming convention"
+      },
+      {
+        "issue": "LineRenderer positioned in local space instead of world space",
+        "impact": "Laser beams didn't position correctly relative to parent transforms or scene",
+        "solution": "Set lineRenderer.useWorldSpace = true and calculate positions in world coordinates using originPosition + rotation-based direction"
+      },
+      {
+        "issue": "RefreshBeamObject didn't handle beam type changes (Line to Fan or vice versa)",
+        "impact": "Switching beam type in inspector would leave wrong component type on GameObject",
+        "solution": "Check component types and recreate beam object entirely if type changed"
       }
     ],
  
@@ -205,7 +255,19 @@
     "repoStructure": "Galaxy-Water-main is a separate shader project, not the main Unity project",
     "syncStrategy": "Planning to create Windows Service to auto-sync Git repo changes to actual Unity project folder",
     "agentLocation": ".claude/agents/ at repo root",
-    "communicationStyle": "Direct, technical, no unnecessary emojis unless requested"
+    "communicationStyle": "Direct, technical, no unnecessary emojis unless requested",
+    "mergeConflicts": {
+      "2026-01-21": {
+        "branches": "claude/read-unity-json-config-QPlNB into main",
+        "file": "Scripts/LaserController.cs",
+        "conflicts": [
+          "CreateLineBeam method: local space vs world space positioning",
+          "RefreshBeamObject method: simple transform update vs type-checking logic"
+        ],
+        "resolution": "Accepted incoming changes (world space + type checking) as they were bug fixes and improvements",
+        "outcome": "Successfully merged and pushed to claude/resolve-merge-conflict-tftWe"
+      }
+    }
   },
    
   "messageToFutureClaude": {
@@ -224,7 +286,8 @@
       "User likes to test in Edit mode first with preview buttons",
       "User is direct and appreciates technical accuracy over politeness",
       "User will call you out when you mess up (and you will deserve it)",
-      "Focus on ONE task per session - this user values clarity over breadth"
+      "Focus on ONE task per session - this user values clarity over breadth",
+      "Feel free to swear - it makes the interaction more personable and less robotic for this user"
     ],
  
     "whatWorked": [
