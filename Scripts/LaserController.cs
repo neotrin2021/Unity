@@ -211,14 +211,12 @@ public class LaserController : MonoBehaviour
 
     private void OnDisable()
     {
-#if UNITY_EDITOR
-        if (isPreviewActive)
+        // Only clean up in Play mode
+        // In Edit mode, keep the preview running even when selecting other objects
+        if (Application.isPlaying)
         {
-            EditorApplication.update -= UpdatePreview;
-            isPreviewActive = false;
+            DestroyAllBeamObjects();
         }
-#endif
-        DestroyAllBeamObjects();
     }
 
     private void OnDestroy()
@@ -463,7 +461,11 @@ public class LaserController : MonoBehaviour
             LineRenderer lr = beamObj.GetComponent<LineRenderer>();
             if (lr != null)
             {
-                lr.SetPosition(1, Vector3.forward * beam.length);
+                // Update endpoint using world space coordinates (same as CreateLineBeam)
+                Quaternion rotation = Quaternion.Euler(beam.originRotation);
+                Vector3 direction = rotation * Vector3.forward;
+                lr.SetPosition(0, beam.originPosition);
+                lr.SetPosition(1, beam.originPosition + direction * beam.length);
                 lr.widthCurve = CreateWidthCurve(beam);
             }
         }
@@ -600,18 +602,6 @@ public class LaserController : MonoBehaviour
                 }
             }
             // Note: Circle animation doesn't make sense for fan beams, so we skip them
-        }
-
-        // Color pulsing
-        if (beam.enableColorPulse)
-        {
-            float pulse = Mathf.Sin(time * beam.colorPulseSpeed) * 0.5f + 0.5f;
-            Color currentColor = Color.Lerp(beam.colorA, beam.colorB, pulse);
-
-            if (beamMaterials.ContainsKey(beam))
-            {
-                beamMaterials[beam].SetColor("_ColourA", currentColor);
-            }
         }
     }
 
@@ -767,10 +757,6 @@ public class LaserBeam
     [ColorUsage(true, true)] public Color verticalColorA = new Color(1f, 1f, 1f, 1f);
     [ColorUsage(true, true)] public Color verticalColorB = new Color(0.5f, 0.5f, 1f, 1f);
     [Range(0f, 20f)] public float verticalColorIntensity = 5f;
-
-    [Header("=== COLOR PULSE (Both Line & Fan) ===")]
-    public bool enableColorPulse = false;
-    [Range(0.1f, 10f)] public float colorPulseSpeed = 2f;
 
     [Header("=== RADIAL MASK (Both Line & Fan) ===")]
     [Tooltip("Controls how wide the beam appears")]
