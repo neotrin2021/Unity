@@ -218,12 +218,14 @@ namespace AxonGenesis
 
         private string GetComponentName(List<Component> components, MethodInfo method)
         {
+            // Check which component declares this method
             foreach (Component comp in components) {
-                if (comp.GetType().GetMethod(method.Name, BindingFlags.Public | BindingFlags.Instance) != null) {
+                if (method.DeclaringType.IsAssignableFrom(comp.GetType())) {
                     return comp.GetType().Name;
                 }
             }
-            return "Unknown";
+            // Fallback to declaring type name
+            return method.DeclaringType.Name;
         }
 
         private void AutoDetectParameterType(ScriptCaller caller, MethodInfo method)
