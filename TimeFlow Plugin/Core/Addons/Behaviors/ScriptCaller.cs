@@ -12,7 +12,6 @@ namespace AxonGenesis
     /// Supports: no parameters, float, int, bool, string, Vector3
     /// </summary>
     [ExecuteInEditMode]
-    [DisallowMultipleComponent]
     [ExcludeFromPreset]
     [AddComponentMenu("Timeflow/Script Caller")]
     public class ScriptCaller : TimeflowEvent
