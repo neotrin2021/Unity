@@ -235,12 +235,18 @@
       "EditorApplication callbacks must be unsubscribed",
       "Use specific object names rather than generic queries",
       "Test in Edit mode with preview functionality before Play mode",
-      "Let agents review code before committing"
+      "Let agents review code before committing",
+      "For LineRenderer: always set useWorldSpace explicitly (true or false depending on needs)",
+      "Test coordinate space early with simple debug scripts before building complex systems",
+      "When setting shader properties, verify shader actually HAS those properties",
+      "Enable shader keywords when using features (_VERTICALCOLOUR_ON, _RADIALMASKSUBTRACTIVE_ON, etc.)",
+      "Organize inspector with clear headers showing what's for Line vs Fan vs Both",
+      "Use OnValidate() for real-time inspector updates in Edit mode"
     ]
   },
  
   "futureEnhancements": {
-    "planned": [
+    "lightTunnel": [
       "Additional lighting effects beyond sequential strips",
       "Neon tube control system (17 tubes)",
       "Individual light control within strips",
@@ -248,6 +254,17 @@
       "Wave effects",
       "Random patterns",
       "Sync with audio/music"
+    ],
+    "laserSystem": [
+      "Create simplified custom shader extracted from MirzaConverted",
+      "Only include properties needed for lasers (color, emission, radial mask, noise)",
+      "Add 'drawing' effect - project circle/decal where laser tip hits",
+      "Raycast to detect surface intersections for realistic projections",
+      "Figure-8, spiral, and other custom motion paths",
+      "Sine wave oscillation on laser parameters (breathing, wobbling)",
+      "Multiple synchronized lasers (patterns, choreography)",
+      "Fan beam animation support",
+      "Audio-reactive laser movement"
     ]
   },
  
@@ -269,16 +286,14 @@
       }
     }
   },
-   
-  "messageToFutureClaude": {
-    "from": "Claude (Session: 2026-01-20)",
-    "to": "Future Claude instances working on this project",
- 
-    "criticalReminders": [
-      "🚨 ALWAYS add [ExecuteAlways] attribute for Edit mode scripts - learned this the hard way!",
-      "🚨 This is HDRP - use _BaseColor and _EmissiveColor, NOT _Color and _EmissionColor",
-      "🚨 Read the entire project-context.json file FIRST before writing any code",
-      "🚨 Confirm which file you're editing - there's Galaxy-Water-main AND a root Scripts folder"
+
+  "mirzaConvertedShader": {
+    "location": "MirzaConverted/",
+    "description": "Complex VFX shader toolkit converted from URP to HDRP",
+    "mainShaders": [
+      "VFXToolkit/Shaders/Particles/HDRP Unlit Circle SDF Particle.shader",
+      "New Amplify Shader.shader",
+      "Solaris-FlameThrower.shader"
     ],
  
     "workflowTips": [
@@ -295,16 +310,69 @@
       "Detailed naming convention documentation helped avoid confusion",
       "Creating this JSON file - you're reading proof it was a good idea"
     ],
- 
-    "mistakesIMade": [
-      "Forgot [ExecuteAlways] - script was completely broken until user caught it",
-      "Used Standard shader properties for HDRP - lights didn't work at all",
-      "Put OnDestroy only in #if UNITY_EDITOR - created memory leak",
-      "Edited wrong files because I wasn't careful about directory structure"
+    "scripts": [
+      "MVFXTK_Rotator.cs - Simple rotation component",
+      "MVFXTK_TransformSine.cs - Sine wave animation for transform"
     ],
- 
-    "finalAdvice": "This user is sharp, technically skilled, and will catch your mistakes - which is great because it means you'll write better code. Be accurate, be direct, and when you screw up (you will), own it and fix it quickly. The user has a good sense of humor about it. Oh, and DEFINITELY use those code review agents before committing. Seriously. Do it.",
- 
-    "ps": "If you're reading this, the user actually kept this file and brought it to a new session. That means they found value in our work together. Don't let them down. - Past Claude"
-  }
+    "userIntent": "User wanted to extract ONLY the laser-relevant parts into a simplified shader, not use the full 3400-line shader"
+  },
+
+  "messagesToFutureClaude": [
+    {
+      "from": "Claude (Session: 2026-01-20)",
+      "topic": "StripLightController",
+      "criticalReminders": [
+        "ALWAYS add [ExecuteAlways] attribute for Edit mode scripts",
+        "This is HDRP - use _BaseColor and _EmissiveColor, NOT _Color and _EmissionColor",
+        "Read the entire project-context.json file FIRST before writing any code",
+        "Confirm which file you're editing - there's Galaxy-Water-main AND a root Scripts folder"
+      ],
+      "mistakesMade": [
+        "Forgot [ExecuteAlways] - script was completely broken",
+        "Used Standard shader properties for HDRP - lights didn't work",
+        "Put OnDestroy only in #if UNITY_EDITOR - created memory leak"
+      ]
+    },
+    {
+      "from": "Claude (Session: 2026-01-21)",
+      "topic": "LaserController - Club Laser System",
+      "criticalReminders": [
+        "🔴 CRITICAL: LineRenderer.useWorldSpace MUST be true for absolute positioning",
+        "🔴 CRITICAL: Material MUST use MirzaConverted custom shader, NOT HDRP/Lit",
+        "🔴 CRITICAL: Enable shader keywords (_RADIALMASKSUBTRACTIVE_ON, _VERTICALCOLOUR_ON) or effects won't work",
+        "LineAlignment.View makes lasers visible from all angles (billboard)",
+        "World space coordinates: originPosition and circleCenter are ABSOLUTE, not relative",
+        "User wants simplified shader extracted from MirzaConverted, not the full 3400-line version"
+      ],
+      "whatWorked": [
+        "SimpleLineTest.cs debug script - isolated coordinate space issue quickly",
+        "Organizing inspector with === HEADERS === showing Line vs Fan vs Both",
+        "OnValidate() for real-time inspector updates",
+        "Circular animation math with CalculateCirclePoint()",
+        "Procedural mesh generation for fan beams"
+      ],
+      "mistakesMade": [
+        "Used local space coordinates initially - laser stuck at world origin",
+        "Assumed HDRP/Lit would work - it has NONE of the custom properties needed",
+        "Used TransformZ alignment - laser only visible from behind",
+        "Tried to override shader properties without verifying shader has them",
+        "Didn't detect beam type changes in RefreshBeamObject() - left old components"
+      ],
+      "userQuirks": [
+        "Very detail-oriented - will catch coordinate space bugs immediately",
+        "Has good sense of humor about bugs (binary/dirty jokes appreciated)",
+        "Prefers extracting/simplifying over using bloated existing solutions",
+        "Wants to understand WHY something works, not just that it works",
+        "Will interrupt if you're taking too long - respects that"
+      ],
+      "nextSteps": [
+        "User has an idea for handling the shader issue - WAIT for them to explain",
+        "May involve extracting specific shader code from MirzaConverted",
+        "May involve creating custom simplified shader from scratch",
+        "DO NOT assume - ask and listen to their approach"
+      ]
+    }
+  ],
+
+  "finalAdviceFromAllClaudes": "This user is sharp, technically skilled, and will catch your mistakes. Be accurate, be direct, own mistakes quickly. They have good humor about it. Read this ENTIRE JSON before coding. Use code-review agents. Test coordinate spaces early with simple debug scripts. Verify shaders have properties before setting them. If you're stuck or taking too long, pause and ask - they'd rather you ask than waste time. The fact this file exists and keeps getting updated means they value thorough documentation. Don't let them down. - All Past Claudes"
 }
