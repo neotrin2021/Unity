@@ -1,89 +1,116 @@
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 [ExecuteInEditMode]
 [DisallowMultipleComponent]
 [RequireComponent(typeof(Renderer))]
 public class InstanceMaterial : MonoBehaviour
 {
-    [SerializeField] [HideInInspector] private Material instancedMaterial;
-    private Renderer objectRenderer;
+    [SerializeField] private Color _color = Color.white;
+    [SerializeField] private Color _emissionColor = Color.black;
+    [SerializeField] private bool _enableEmission = false;
+
+    private Renderer _renderer;
+    private MaterialPropertyBlock _propertyBlock;
+
+    // Shader property IDs (cached for performance)
+    private static readonly int ColorID = Shader.PropertyToID("_Color");
+    private static readonly int BaseColorID = Shader.PropertyToID("_BaseColor");
+    private static readonly int EmissionColorID = Shader.PropertyToID("_EmissionColor");
+
+    public Color Color
+    {
+        get => _color;
+        set
+        {
+            _color = value;
+            ApplyProperties();
+        }
+    }
+
+    public Color EmissionColor
+    {
+        get => _emissionColor;
+        set
+        {
+            _emissionColor = value;
+            ApplyProperties();
+        }
+    }
+
+    public bool EnableEmission
+    {
+        get => _enableEmission;
+        set
+        {
+            _enableEmission = value;
+            ApplyProperties();
+        }
+    }
 
     private void OnEnable()
     {
-        objectRenderer = GetComponent<Renderer>();
-
-        // Prevent repeated instancing
-        if (objectRenderer != null && objectRenderer.sharedMaterial != instancedMaterial)
-        {
-            var original = objectRenderer.sharedMaterial;
-            instancedMaterial = new Material(original);
-            instancedMaterial.name = $"{original.name}_Instance_{gameObject.name}";
-            objectRenderer.sharedMaterial = instancedMaterial;
-
-#if UNITY_EDITOR
-            Undo.RegisterCreatedObjectUndo(instancedMaterial, "Create Material Instance");
-#endif
-        }
+        _renderer = GetComponent<Renderer>();
+        _propertyBlock = new MaterialPropertyBlock();
+        ApplyProperties();
     }
 
-    private void OnDestroy()
+    private void OnDisable()
     {
-        if (instancedMaterial != null)
+        // Clear property block to restore original material appearance
+        if (_renderer != null)
         {
-            if (Application.isPlaying)
-                Destroy(instancedMaterial);
-            else
-                DestroyImmediate(instancedMaterial);
+            _renderer.SetPropertyBlock(null);
         }
     }
 
+    private void OnValidate()
+    {
+        // Apply changes made in the Inspector
+        if (_renderer == null)
+            _renderer = GetComponent<Renderer>();
+
+        if (_renderer != null)
+        {
+            _propertyBlock ??= new MaterialPropertyBlock();
+            ApplyProperties();
+        }
+    }
+
+    private void ApplyProperties()
+    {
+        if (_renderer == null || _propertyBlock == null)
+            return;
+
+        // Get existing properties to preserve any other overrides
+        _renderer.GetPropertyBlock(_propertyBlock);
+
+        // Set color (supports both Standard and URP/HDRP shaders)
+        _propertyBlock.SetColor(ColorID, _color);
+        _propertyBlock.SetColor(BaseColorID, _color);
+
+        // Set emission
+        if (_enableEmission)
+        {
+            _propertyBlock.SetColor(EmissionColorID, _emissionColor);
+        }
+        else
+        {
+            _propertyBlock.SetColor(EmissionColorID, Color.black);
+        }
+
+        _renderer.SetPropertyBlock(_propertyBlock);
+    }
+
+    // Public methods for runtime changes
     public void SetColor(Color color)
     {
-        if (instancedMaterial != null)
-            instancedMaterial.color = color;
+        Color = color;
+    }
+
+    public void SetEmission(Color emissionColor, bool enable = true)
+    {
+        _enableEmission = enable;
+        _emissionColor = emissionColor;
+        ApplyProperties();
     }
 }
-
-/*
-using UnityEngine;
-
-[ExecuteInEditMode] // Allows script to run in Edit Mode
-public class InstanceMaterial : MonoBehaviour
-{
-    private Material instancedMaterial;
-    private Renderer objectRenderer;
-    void Awake() // Runs in both Play and Edit modes
-    {
-        objectRenderer = GetComponent<Renderer>();
-
-        if (objectRenderer != null)
-        {
-            // Prevent modifying shared material
-            instancedMaterial = new Material(objectRenderer.sharedMaterial);
-            objectRenderer.sharedMaterial = instancedMaterial;
-        }
-    }
-
-    public void SetColor(Color color)
-    {
-        if (instancedMaterial != null)
-            instancedMaterial.color = color;
-    }
-
-    void OnDestroy()
-    {
-        // Cleanup the instance to prevent memory leaks
-        if (!Application.isPlaying && instancedMaterial != null)
-        {
-            DestroyImmediate(instancedMaterial);
-        }
-        else if (instancedMaterial != null)
-        {
-            Destroy(instancedMaterial);
-        }
-    }
-}
-*/
