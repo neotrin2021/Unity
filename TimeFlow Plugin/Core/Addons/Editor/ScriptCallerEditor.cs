@@ -4,12 +4,23 @@ using UnityEngine;
 using UnityEditor;
 using System.Reflection;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace AxonGenesis
 {
     [CustomEditor(typeof(ScriptCaller))]
     public class ScriptCallerEditor : Editor
     {
+        private List<MethodInfo> availableMethods = new List<MethodInfo>();
+        private string[] methodNames = new string[0];
+        private int selectedMethodIndex = -1;
+
+        private void OnEnable()
+        {
+            ScriptCaller caller = (ScriptCaller)target;
+            RefreshMethodList(caller);
+        }
+
         public override void OnInspectorGUI()
         {
             ScriptCaller caller = (ScriptCaller)target;
@@ -26,9 +37,60 @@ namespace AxonGenesis
 
             // Target and method
             EditorGUILayout.LabelField("Method Call Settings", EditorStyles.boldLabel);
+
+            EditorGUI.BeginChangeCheck();
             caller.Obj = (GameObject)EditorGUILayout.ObjectField("Target GameObject", caller.Obj, typeof(GameObject), true);
             caller.targetComponent = (Component)EditorGUILayout.ObjectField("Target Component (optional)", caller.targetComponent, typeof(Component), true);
-            caller.Function = EditorGUILayout.TextField("Method Name", caller.Function);
+
+            // If target changed, refresh method list
+            if (EditorGUI.EndChangeCheck()) {
+                RefreshMethodList(caller);
+            }
+
+            // Method selection dropdown
+            EditorGUILayout.BeginHorizontal();
+
+            if (availableMethods.Count > 0) {
+                // Find current method index
+                selectedMethodIndex = -1;
+                for (int i = 0; i < availableMethods.Count; i++) {
+                    if (availableMethods[i].Name == caller.Function) {
+                        selectedMethodIndex = i;
+                        break;
+                    }
+                }
+
+                // Show dropdown
+                int newIndex = EditorGUILayout.Popup("Select Method", selectedMethodIndex, methodNames);
+
+                // If selection changed, update method name and auto-detect parameter type
+                if (newIndex != selectedMethodIndex && newIndex >= 0) {
+                    selectedMethodIndex = newIndex;
+                    MethodInfo selectedMethod = availableMethods[newIndex];
+                    caller.Function = selectedMethod.Name;
+
+                    // Auto-detect parameter type
+                    AutoDetectParameterType(caller, selectedMethod);
+                }
+            }
+            else {
+                EditorGUILayout.LabelField("Select Method", "No methods found");
+            }
+
+            // Refresh button
+            if (GUILayout.Button("🔄", GUILayout.Width(30))) {
+                RefreshMethodList(caller);
+            }
+
+            EditorGUILayout.EndHorizontal();
+
+            // Manual method name field (for edge cases or manual entry)
+            EditorGUILayout.BeginHorizontal();
+            caller.Function = EditorGUILayout.TextField("Method Name (manual)", caller.Function);
+            if (GUILayout.Button("Find", GUILayout.Width(50))) {
+                RefreshMethodList(caller);
+            }
+            EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.Space(5);
 
@@ -85,6 +147,110 @@ namespace AxonGenesis
 
             if (EditorGUI.EndChangeCheck()) {
                 EditorUtility.SetDirty(caller);
+            }
+        }
+
+        private void RefreshMethodList(ScriptCaller caller)
+        {
+            availableMethods.Clear();
+
+            if (caller.Obj == null) {
+                methodNames = new string[0];
+                return;
+            }
+
+            // Get all components to search
+            List<Component> componentsToSearch = new List<Component>();
+
+            if (caller.targetComponent != null) {
+                componentsToSearch.Add(caller.targetComponent);
+            }
+            else {
+                Component[] allComponents = caller.Obj.GetComponents<Component>();
+                componentsToSearch.AddRange(allComponents.Where(c => c != null));
+            }
+
+            // Gather all public methods from components
+            HashSet<string> uniqueMethodNames = new HashSet<string>();
+
+            foreach (Component comp in componentsToSearch) {
+                System.Type type = comp.GetType();
+                MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+
+                foreach (MethodInfo method in methods) {
+                    // Skip Unity built-in methods
+                    if (method.DeclaringType == typeof(Component) ||
+                        method.DeclaringType == typeof(MonoBehaviour) ||
+                        method.DeclaringType == typeof(Behaviour) ||
+                        method.DeclaringType == typeof(UnityEngine.Object)) {
+                        continue;
+                    }
+
+                    // Skip getters/setters
+                    if (method.IsSpecialName) continue;
+
+                    // Only include methods with 0 or 1 parameters
+                    ParameterInfo[] parameters = method.GetParameters();
+                    if (parameters.Length > 1) continue;
+
+                    // Add to list if unique
+                    string signature = GetMethodDisplayName(method, comp.GetType().Name);
+                    if (!uniqueMethodNames.Contains(signature)) {
+                        uniqueMethodNames.Add(signature);
+                        availableMethods.Add(method);
+                    }
+                }
+            }
+
+            // Sort methods alphabetically
+            availableMethods = availableMethods.OrderBy(m => m.Name).ToList();
+
+            // Create display names
+            methodNames = availableMethods.Select(m => GetMethodDisplayName(m, GetComponentName(componentsToSearch, m))).ToArray();
+        }
+
+        private string GetMethodDisplayName(MethodInfo method, string componentName)
+        {
+            ParameterInfo[] parameters = method.GetParameters();
+            string paramDisplay = parameters.Length == 0 ? "()" : $"({parameters[0].ParameterType.Name})";
+            return $"{componentName}.{method.Name}{paramDisplay}";
+        }
+
+        private string GetComponentName(List<Component> components, MethodInfo method)
+        {
+            foreach (Component comp in components) {
+                if (comp.GetType().GetMethod(method.Name, BindingFlags.Public | BindingFlags.Instance) != null) {
+                    return comp.GetType().Name;
+                }
+            }
+            return "Unknown";
+        }
+
+        private void AutoDetectParameterType(ScriptCaller caller, MethodInfo method)
+        {
+            ParameterInfo[] parameters = method.GetParameters();
+
+            if (parameters.Length == 0) {
+                caller.parameterType = ScriptCaller.ParameterType.None;
+            }
+            else if (parameters.Length == 1) {
+                System.Type paramType = parameters[0].ParameterType;
+
+                if (paramType == typeof(float)) {
+                    caller.parameterType = ScriptCaller.ParameterType.Float;
+                }
+                else if (paramType == typeof(int)) {
+                    caller.parameterType = ScriptCaller.ParameterType.Int;
+                }
+                else if (paramType == typeof(bool)) {
+                    caller.parameterType = ScriptCaller.ParameterType.Bool;
+                }
+                else if (paramType == typeof(string)) {
+                    caller.parameterType = ScriptCaller.ParameterType.String;
+                }
+                else if (paramType == typeof(Vector3)) {
+                    caller.parameterType = ScriptCaller.ParameterType.Vector3;
+                }
             }
         }
 
