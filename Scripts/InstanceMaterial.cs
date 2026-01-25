@@ -5,8 +5,8 @@ using UnityEngine;
 [RequireComponent(typeof(Renderer))]
 public class InstanceMaterial : MonoBehaviour
 {
-    [SerializeField] private Color _color = Color.white;
-    [SerializeField] private Color _emissionColor = Color.black;
+    [SerializeField] [ColorUsage(true, true)] private Color _color = Color.white;
+    [SerializeField] [ColorUsage(true, true)] private Color _emissionColor = Color.black;
     [SerializeField] private bool _enableEmission = false;
 
     private Renderer _renderer;
