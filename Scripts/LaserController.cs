@@ -211,14 +211,12 @@ public class LaserController : MonoBehaviour
 
     private void OnDisable()
     {
-#if UNITY_EDITOR
-        if (isPreviewActive)
+        // Only clean up in Play mode
+        // In Edit mode, keep the preview running even when selecting other objects
+        if (Application.isPlaying)
         {
-            EditorApplication.update -= UpdatePreview;
-            isPreviewActive = false;
+            DestroyAllBeamObjects();
         }
-#endif
-        DestroyAllBeamObjects();
     }
 
     private void OnDestroy()
@@ -278,8 +276,8 @@ public class LaserController : MonoBehaviour
 
         GameObject beamObj = new GameObject($"Laser_{beam.beamType}_{beamIds[beam]}");
         beamObj.transform.SetParent(transform);
-        beamObj.transform.localPosition = Vector3.zero; // Keep GameObject at controller position
-        beamObj.transform.localRotation = Quaternion.identity; // No rotation on GameObject
+        beamObj.transform.localPosition = Vector3.zero;
+        beamObj.transform.localRotation = Quaternion.identity;
 
         // Create material instance
         if (laserMaterial != null && !beamMaterials.ContainsKey(beam))
@@ -294,9 +292,6 @@ public class LaserController : MonoBehaviour
         }
         else if (beam.beamType == LaserType.Fan)
         {
-            // Fan beams use GameObject transform for positioning
-            beamObj.transform.localPosition = beam.originPosition;
-            beamObj.transform.localRotation = Quaternion.Euler(beam.originRotation);
             CreateFanBeam(beamObj, beam);
         }
 
@@ -314,14 +309,11 @@ public class LaserController : MonoBehaviour
         }
 
         lineRenderer.positionCount = 2;
-        lineRenderer.useWorldSpace = true; // Use world space coordinates like SimpleLineTest
+        lineRenderer.useWorldSpace = true; // Use world space coordinates
 
-        // Start point uses originPosition (in world space)
+        // Start and end points are direct world space coordinates
         lineRenderer.SetPosition(0, beam.originPosition);
-        // End point calculates from originPosition + direction based on originRotation
-        Quaternion rotation = Quaternion.Euler(beam.originRotation);
-        Vector3 direction = rotation * Vector3.forward;
-        lineRenderer.SetPosition(1, beam.originPosition + direction * beam.length);
+        lineRenderer.SetPosition(1, beam.targetPosition);
 
         // Width curve - thicker at base, thinner at tip
         lineRenderer.widthCurve = CreateWidthCurve(beam);
@@ -363,7 +355,8 @@ public class LaserController : MonoBehaviour
 
         int rayCount = beam.fanRayCount;
         float spreadAngle = beam.fanSpreadAngle;
-        float length = beam.length;
+        // Calculate length from origin to target
+        float length = Vector3.Distance(beam.originPosition, beam.targetPosition);
         float width = beam.width;
 
         List<Vector3> vertices = new List<Vector3>();
@@ -466,22 +459,14 @@ public class LaserController : MonoBehaviour
             LineRenderer lr = beamObj.GetComponent<LineRenderer>();
             if (lr != null)
             {
-                // Update start point
+                // Update positions using direct world space coordinates
                 lr.SetPosition(0, beam.originPosition);
-                // Update end point based on originRotation
-                Quaternion rotation = Quaternion.Euler(beam.originRotation);
-                Vector3 direction = rotation * Vector3.forward;
-                lr.SetPosition(1, beam.originPosition + direction * beam.length);
-                // Update width curve
+                lr.SetPosition(1, beam.targetPosition);
                 lr.widthCurve = CreateWidthCurve(beam);
             }
         }
         else if (beam.beamType == LaserType.Fan)
         {
-            // For fan beams, update transform and regenerate mesh
-            beamObj.transform.localPosition = beam.originPosition;
-            beamObj.transform.localRotation = Quaternion.Euler(beam.originRotation);
-
             MeshFilter mf = beamObj.GetComponent<MeshFilter>();
             if (mf != null)
             {
@@ -570,33 +555,32 @@ public class LaserController : MonoBehaviour
             // Rotation animation (sweeping)
             if (beam.beamType == LaserType.Line)
             {
-                // For line beams, animate the endpoint to create scanning effect
+                // For line beams, rotate the target position around the origin
                 LineRenderer lr = beamObj.GetComponent<LineRenderer>();
                 if (lr != null)
                 {
-                    // Calculate rotation angle
-                    Vector3 rotation = beam.originRotation + beam.rotationSpeed * time;
-                    Quaternion rot = Quaternion.Euler(rotation);
+                    // Calculate rotation from origin to target
+                    Vector3 direction = (beam.targetPosition - beam.originPosition).normalized;
+                    float distance = Vector3.Distance(beam.originPosition, beam.targetPosition);
 
-                    // Rotate the direction vector
-                    Vector3 direction = rot * Vector3.forward;
-                    Vector3 endPoint = beam.originPosition + direction * beam.length;
+                    // Apply rotation over time
+                    Quaternion rotation = Quaternion.Euler(beam.rotationSpeed * time);
+                    Vector3 rotatedDirection = rotation * direction;
+                    Vector3 endPoint = beam.originPosition + rotatedDirection * distance;
 
-                    // Update line positions (start point stays at originPosition)
-                    lr.SetPosition(0, beam.originPosition);
+                    // Update line endpoint
                     lr.SetPosition(1, endPoint);
                 }
             }
             else
             {
                 // For fan beams, rotate the entire GameObject
-                Vector3 rotation = beam.originRotation + beam.rotationSpeed * time;
-                beamObj.transform.localRotation = Quaternion.Euler(rotation);
+                beamObj.transform.localRotation = Quaternion.Euler(beam.rotationSpeed * time);
             }
         }
         else if (beam.animationType == AnimationType.Circle)
         {
-            // Circular animation (tip traces a circle)
+            // Circular animation (tip orbits around target position)
             if (beam.beamType == LaserType.Line)
             {
                 LineRenderer lr = beamObj.GetComponent<LineRenderer>();
@@ -605,27 +589,14 @@ public class LaserController : MonoBehaviour
                     // Calculate angle in radians
                     float angle = (time * beam.circleSpeed) * Mathf.Deg2Rad;
 
-                    // Calculate position on circle based on plane
-                    Vector3 circlePoint = CalculateCirclePoint(beam.circleCenter, beam.circleRadius, angle, beam.circlePlane);
+                    // Calculate position on circle orbiting around targetPosition
+                    Vector3 circlePoint = CalculateCirclePoint(beam.targetPosition, beam.circleRadius, angle, beam.circlePlane);
 
-                    // Update line positions (start at originPosition, end at circle point)
-                    lr.SetPosition(0, beam.originPosition);
+                    // Point laser at the circle point
                     lr.SetPosition(1, circlePoint);
                 }
             }
             // Note: Circle animation doesn't make sense for fan beams, so we skip them
-        }
-
-        // Color pulsing
-        if (beam.enableColorPulse)
-        {
-            float pulse = Mathf.Sin(time * beam.colorPulseSpeed) * 0.5f + 0.5f;
-            Color currentColor = Color.Lerp(beam.colorA, beam.colorB, pulse);
-
-            if (beamMaterials.ContainsKey(beam))
-            {
-                beamMaterials[beam].SetColor("_ColourA", currentColor);
-            }
         }
     }
 
@@ -741,8 +712,7 @@ public class LaserBeam
 
     [Header("=== TRANSFORM (Both Line & Fan) ===")]
     public Vector3 originPosition = Vector3.zero;
-    public Vector3 originRotation = Vector3.zero;
-    public float length = 10f;
+    public Vector3 targetPosition = new Vector3(0, 0, 10);
     public float width = 0.1f;
     [Range(0f, 1f)] public float tipWidthMultiplier = 0.5f;
 
@@ -761,9 +731,7 @@ public class LaserBeam
     public Vector3 rotationSpeed = Vector3.zero;
 
     [Space(5)]
-    [Tooltip("Circle animation - where in 3D space the circle center is (Line type only)")]
-    public Vector3 circleCenter = new Vector3(0, 0, 10);
-    [Tooltip("Radius of the circle the laser tip traces (Line type only)")]
+    [Tooltip("Radius of the circle the laser tip traces around Target Position (Line type only)")]
     [Range(0.1f, 20f)] public float circleRadius = 3f;
     [Tooltip("Speed of circular motion in degrees/second (Line type only)")]
     [Range(1f, 360f)] public float circleSpeed = 60f;
@@ -781,10 +749,6 @@ public class LaserBeam
     [ColorUsage(true, true)] public Color verticalColorA = new Color(1f, 1f, 1f, 1f);
     [ColorUsage(true, true)] public Color verticalColorB = new Color(0.5f, 0.5f, 1f, 1f);
     [Range(0f, 20f)] public float verticalColorIntensity = 5f;
-
-    [Header("=== COLOR PULSE (Both Line & Fan) ===")]
-    public bool enableColorPulse = false;
-    [Range(0.1f, 10f)] public float colorPulseSpeed = 2f;
 
     [Header("=== RADIAL MASK (Both Line & Fan) ===")]
     [Tooltip("Controls how wide the beam appears")]

@@ -155,90 +155,43 @@
     },
 
     "LaserController.cs": {
-      "purpose": "Comprehensive club-style laser system with line beams and fan effects",
-      "location": "Scripts/ (root level)",
-      "createdDate": "2026-01-21",
-      "status": "PARTIALLY WORKING - needs custom shader to be fully functional",
+      "purpose": "Comprehensive club laser system with line beams and fan effects",
+      "location": "Scripts/",
       "features": [
-        "Two laser types: Line (straight beams) and Fan (expanding fan pattern)",
-        "Line beams use LineRenderer with world space coordinates",
-        "Fan beams use procedural mesh generation",
-        "Three animation modes: None, Rotation (sweeping), Circle (tip traces circle)",
-        "Real-time inspector updates via OnValidate()",
-        "Edit mode preview with animation support",
+        "Line and Fan beam types",
+        "World space coordinate system for positioning",
+        "Multiple animation types (None, Rotation, Circle)",
+        "Circular motion with configurable plane (XY, XZ, YZ)",
+        "Edit mode preview with real-time inspector updates via OnValidate",
         "HDR color control with emission intensity",
-        "Color pulsing between two colors",
-        "Vertical color gradients (base to tip)",
-        "Radial mask for beam appearance",
-        "Animated noise effects",
-        "Proper material instancing and cleanup"
+        "Color pulsing animation",
+        "Vertical color gradients along beam length",
+        "Noise animation effects",
+        "Radial mask for beam width control",
+        "Type-safe beam switching (auto-recreates on type change)",
+        "Material instancing per beam",
+        "Proper cleanup in OnDestroy"
       ],
-      "criticalSettings": {
-        "LineRenderer": {
-          "useWorldSpace": "MUST be true - positions are absolute world coordinates",
-          "alignment": "LineAlignment.View - makes laser visible from all angles (billboard effect)",
-          "positionCount": "2 - start point and end point"
-        },
-        "coordinates": {
-          "originPosition": "World space position where laser starts",
-          "circleCenter": "World space position where circle is drawn",
-          "noRelativeCoordinates": "Everything is absolute, no parent-relative offsets"
-        }
-      },
-      "knownIssues": [
-        "CRITICAL: Material MUST use MirzaConverted custom shader, NOT HDRP/Lit",
-        "HDRP/Lit shader doesn't have custom properties (_ColourA, _RadialMaskRadius, etc.)",
-        "Emission Intensity only works with custom shader properties",
-        "Radial Mask only works with custom shader keywords",
-        "Noise only works with custom shader",
-        "Vertical Color only works with custom shader",
-        "Alpha transparency requires material in Transparent mode",
-        "User needs to either: use existing MirzaConverted material OR create simplified custom shader"
-      ],
-      "inspectorOrganization": {
-        "sections": [
-          "=== BASIC SETTINGS (Both Line & Fan) ===",
-          "=== TRANSFORM (Both Line & Fan) ===",
-          "=== FAN-ONLY SETTINGS ===",
-          "=== LINE-ONLY ANIMATION ===",
-          "=== COLOR & EMISSION (Both Line & Fan) ===",
-          "=== VERTICAL COLOR GRADIENT (Both Line & Fan) ===",
-          "=== COLOR PULSE (Both Line & Fan) ===",
-          "=== RADIAL MASK (Both Line & Fan) ===",
-          "=== NOISE (Both Line & Fan) ==="
-        ],
-        "clarity": "Clearly labeled what works for Line vs Fan vs Both"
-      },
       "requirements": [
-        "[ExecuteAlways] attribute for Edit mode",
-        "Material with MirzaConverted shader (or equivalent custom shader)",
-        "HDRP render pipeline"
-      ]
-    },
-
-    "LaserControllerEditor.cs": {
-      "purpose": "Custom Inspector for LaserController",
-      "location": "Editor/ (root level)",
-      "features": [
-        "Start Preview button (green)",
-        "Stop Preview button (red)",
-        "Refresh All Lasers button (yellow)",
-        "Clear All Lasers button with confirmation dialog",
-        "Status indicator when preview is running",
-        "Helpful tips section"
+        "[ExecuteAlways] attribute for Edit mode functionality",
+        "MirzaConverted shader material for volumetric laser appearance",
+        "Uses LineRenderer for Line beams, MeshFilter/MeshRenderer for Fan beams"
+      ],
+      "technicalNotes": [
+        "LineRenderer uses world space coordinates (useWorldSpace = true)",
+        "Start/end positions calculated from originPosition + rotation-based direction",
+        "RefreshBeamObject checks for type changes and recreates geometry if needed",
+        "Each beam gets unique ID for naming GameObjects"
       ]
     },
 
     "SimpleLineTest.cs": {
-      "purpose": "Debug script for testing LineRenderer coordinate space",
-      "location": "Scripts/ (root level)",
-      "status": "DEBUG TOOL - used to verify world space coordinates work correctly",
+      "purpose": "Debugging utility for testing LineRenderer positioning",
+      "location": "Scripts/",
       "features": [
-        "Draws line from startPoint to endPoint in world space",
-        "Shows gizmo spheres at start (green) and end (red) points",
-        "Helped identify that useWorldSpace=true was the solution"
-      ],
-      "note": "Can be deleted if not needed, was just for debugging coordinate issues"
+        "Simple two-point line for verifying world space coordinates",
+        "Used to validate LineRenderer behavior during development"
+      ]
     }
   },
  
@@ -265,24 +218,14 @@
         "solution": "Explicitly find lights by their naming convention"
       },
       {
-        "issue": "LineRenderer local space coordinates - originPosition moved GameObject instead of line start point",
-        "impact": "Laser start point was stuck at world (0,0,0), user couldn't position it",
-        "solution": "Set lineRenderer.useWorldSpace = true, then all positions are absolute world coordinates"
+        "issue": "LineRenderer positioned in local space instead of world space",
+        "impact": "Laser beams didn't position correctly relative to parent transforms or scene",
+        "solution": "Set lineRenderer.useWorldSpace = true and calculate positions in world coordinates using originPosition + rotation-based direction"
       },
       {
-        "issue": "Assumed HDRP/Lit shader would work with custom properties",
-        "impact": "NONE of the laser effects worked - no emission control, no radial mask, no noise",
-        "solution": "MUST use material with MirzaConverted custom shader OR create custom shader with needed properties"
-      },
-      {
-        "issue": "LineRenderer alignment was TransformZ which prevented visibility from all angles",
-        "impact": "Laser only visible from behind, not from front",
-        "solution": "Use LineAlignment.View for billboard effect - always faces camera"
-      },
-      {
-        "issue": "OnValidate() caused beam type switching to not work properly",
-        "impact": "Switching from Line to Fan during preview left old renderer component",
-        "solution": "Check if beam type changed and destroy/recreate beam object with correct components"
+        "issue": "RefreshBeamObject didn't handle beam type changes (Line to Fan or vice versa)",
+        "impact": "Switching beam type in inspector would leave wrong component type on GameObject",
+        "solution": "Check component types and recreate beam object entirely if type changed"
       }
     ],
  
@@ -329,7 +272,19 @@
     "repoStructure": "Galaxy-Water-main is a separate shader project, not the main Unity project",
     "syncStrategy": "Planning to create Windows Service to auto-sync Git repo changes to actual Unity project folder",
     "agentLocation": ".claude/agents/ at repo root",
-    "communicationStyle": "Direct, technical, no unnecessary emojis unless requested"
+    "communicationStyle": "Direct, technical, no unnecessary emojis unless requested",
+    "mergeConflicts": {
+      "2026-01-21": {
+        "branches": "claude/read-unity-json-config-QPlNB into main",
+        "file": "Scripts/LaserController.cs",
+        "conflicts": [
+          "CreateLineBeam method: local space vs world space positioning",
+          "RefreshBeamObject method: simple transform update vs type-checking logic"
+        ],
+        "resolution": "Accepted incoming changes (world space + type checking) as they were bug fixes and improvements",
+        "outcome": "Successfully merged and pushed to claude/resolve-merge-conflict-tftWe"
+      }
+    }
   },
 
   "mirzaConvertedShader": {
@@ -340,35 +295,20 @@
       "New Amplify Shader.shader",
       "Solaris-FlameThrower.shader"
     ],
-    "sizeAndComplexity": {
-      "lines": "3400+ lines per shader file",
-      "generatedBy": "Amplify Shader Editor",
-      "includes": "Math utilities, noise functions, GLSL translations"
-    },
-    "keyProperties": {
-      "_ColourA": "Primary color",
-      "_ColourB": "Secondary color (for gradients/pulsing)",
-      "_ColourValueMultiplier": "Emission intensity multiplier (0-20)",
-      "_RadialMaskRadius": "Controls beam width (0-1)",
-      "_RadialMaskFeather": "Edge softness (0-2)",
-      "_RadialMaskSubtractive": "Cleaner edges when true",
-      "_Noise1": "Enable noise (0 or 1)",
-      "_NoiseAnimation": "Vector4 for noise movement",
-      "_NoiseScale1": "Noise detail level",
-      "_NoisePower1": "Noise contrast",
-      "_VerticalColour": "Enable vertical gradient (0 or 1)",
-      "_VerticalColourA": "Gradient color at base",
-      "_VerticalColourB": "Gradient color at tip",
-      "_Alpha": "Transparency (requires Transparent surface type)"
-    },
-    "keywords": {
-      "_RADIALMASKSUBTRACTIVE_ON": "Must enable for radial mask to work",
-      "_VERTICALCOLOUR_ON": "Must enable for vertical color gradient",
-      "_NOISEDILATIONENABLED_ON": "Various noise-related keywords"
-    },
-    "materials": [
-      "MirzaConverted/New Material.mat",
-      "MirzaConverted/VFXToolkit/Materials/*.mat"
+ 
+    "workflowTips": [
+      "User prefers JetBrains Rider - compilation errors will be caught there",
+      "User likes to test in Edit mode first with preview buttons",
+      "User is direct and appreciates technical accuracy over politeness",
+      "User will call you out when you mess up (and you will deserve it)",
+      "Focus on ONE task per session - this user values clarity over breadth",
+      "Feel free to swear - it makes the interaction more personable and less robotic for this user"
+    ],
+ 
+    "whatWorked": [
+      "Custom agents (code-reviewer, edit-mode-tester) - USE THEM!",
+      "Detailed naming convention documentation helped avoid confusion",
+      "Creating this JSON file - you're reading proof it was a good idea"
     ],
     "scripts": [
       "MVFXTK_Rotator.cs - Simple rotation component",
