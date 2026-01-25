@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 612ddc45eeaa1ce49a1f355c4eccc3e4
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Presets/Editors/AudioReactiveComponentPresetEditor.cs
+  uploadId: 834778

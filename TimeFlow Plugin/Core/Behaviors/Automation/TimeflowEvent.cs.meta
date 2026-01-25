@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 5d8d6ad221ddf497ea5ba5e0d35951ca
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {fileID: 2800000, guid: 9189e975c62c14a4387c8e882e883a6b, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Behaviors/Automation/TimeflowEvent.cs
+  uploadId: 834778

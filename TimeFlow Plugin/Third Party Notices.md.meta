@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 767f3c38143e2294aaa3a7f8aa687f81
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Third Party Notices.md
+  uploadId: 834778

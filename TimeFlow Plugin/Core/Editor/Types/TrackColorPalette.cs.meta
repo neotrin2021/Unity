@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 665a8b8df3222ed4b8adc1bd0fd9ae5e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Editor/Types/TrackColorPalette.cs
+  uploadId: 834778

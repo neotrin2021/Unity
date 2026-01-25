@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: f16c0df7ba73a444292fd0cbfa76f2a3
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Presets/Editors/ComponentPresetPropertyDrawer.cs
+  uploadId: 834778

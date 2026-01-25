@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 019c66e67775caa4b85ff9eea5fe59df
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Types/Keyframe.Editor.cs
+  uploadId: 834778

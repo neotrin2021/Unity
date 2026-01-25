@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: f0e11b48a2c719741acf3272805c2a14
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Editor/Attributes/TimeflowIgnoreAttribute.cs
+  uploadId: 834778

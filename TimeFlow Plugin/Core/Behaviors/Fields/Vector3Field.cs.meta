@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 5a330f0ed0301e54c8d8b8fdbef0c926
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {fileID: 2800000, guid: 20044272caf56f74490866d92ac64fc1, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Behaviors/Fields/Vector3Field.cs
+  uploadId: 834778

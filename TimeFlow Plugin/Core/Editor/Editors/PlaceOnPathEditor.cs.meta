@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: f603caaaaa199f740af92b0654115a12
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Editor/Editors/PlaceOnPathEditor.cs
+  uploadId: 834778

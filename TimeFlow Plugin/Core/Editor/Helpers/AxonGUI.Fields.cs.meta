@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 99a24f45a35c44844aefb0a39e288a9e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Editor/Helpers/AxonGUI.Fields.cs
+  uploadId: 834778

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 0cd824545a366be45b60a32fc7accdd8
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Presets/Editors/TimeflowChannelComponentPresetEdit.cs
+  uploadId: 834778

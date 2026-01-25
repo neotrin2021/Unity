@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ffe7b5183a51a834c8d5fa33f577e7ed
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Channels/ChannelLink/Difference.asset
+  uploadId: 834778

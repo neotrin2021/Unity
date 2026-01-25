@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e4711c0d211474b448c69dc75f4f6634
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Editor/EditorIcons.asset
+  uploadId: 834778

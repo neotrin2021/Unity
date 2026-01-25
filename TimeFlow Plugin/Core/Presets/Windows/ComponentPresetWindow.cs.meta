@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 48f49ddd0e4f537468548b6c854fa873
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Presets/Windows/ComponentPresetWindow.cs
+  uploadId: 834778

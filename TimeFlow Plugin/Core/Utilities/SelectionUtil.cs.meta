@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: e134e2f5116ba5e4cb8bd8c9522b653e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Utilities/SelectionUtil.cs
+  uploadId: 834778

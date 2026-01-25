@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: fde01d7278521224cbf2e23513dfd9fe
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {fileID: 2800000, guid: 1c799afd9c813a64aa16f841d9d0cbd1, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Behaviors/Fields/FloatField.cs
+  uploadId: 834778

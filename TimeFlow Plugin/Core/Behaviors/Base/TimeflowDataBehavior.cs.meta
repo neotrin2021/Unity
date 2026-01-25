@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: ab89341b9ded4264b99e6cd6a2a24f58
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: -42
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Behaviors/Base/TimeflowDataBehavior.cs
+  uploadId: 834778

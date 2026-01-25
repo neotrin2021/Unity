@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: d6720506510c6412bac966e0a8c25b15
+timeCreated: 1438824494
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Editor/Menus/EditorMenu.cs
+  uploadId: 834778

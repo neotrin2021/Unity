@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 856c1c5f4ad4dc24fb8ce8a40912eaf9
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Interfaces/IPropertyLinkable.cs
+  uploadId: 834778

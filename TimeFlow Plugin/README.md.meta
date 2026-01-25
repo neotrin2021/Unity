@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: c133ab2c8f2b5a74aa9b51439629d912
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/README.md
+  uploadId: 834778

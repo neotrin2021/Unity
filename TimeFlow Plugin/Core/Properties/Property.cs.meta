@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: a7ab4c80b05674faaa49a6d5dcd247a0
+timeCreated: 1438824494
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Properties/Property.cs
+  uploadId: 834778

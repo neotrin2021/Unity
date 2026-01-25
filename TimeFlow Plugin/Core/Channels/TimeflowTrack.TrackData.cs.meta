@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 417ce757da0392947ac3bb9073b1816a
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Channels/TimeflowTrack.TrackData.cs
+  uploadId: 834778

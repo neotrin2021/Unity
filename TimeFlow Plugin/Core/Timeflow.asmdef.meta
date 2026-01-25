@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 54629d595f38c9f4e98c5070d489720c
+AssemblyDefinitionImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Timeflow.asmdef
+  uploadId: 834778

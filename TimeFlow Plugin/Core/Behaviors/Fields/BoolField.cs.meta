@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: ce13f7a8a853bc94493d2fb2a21350de
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {fileID: 2800000, guid: 13ca01153522c4a4f96978ea6da6b7c6, type: 3}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Behaviors/Fields/BoolField.cs
+  uploadId: 834778

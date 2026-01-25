@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 347d3bb54ffb5e94299d4011dfffa05a
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 247895
+  packageName: Timeflow Animation System
+  packageVersion: 1.9.3
+  assetPath: Packages/com.axongenesis.timeflow/Core/Editor/Menus/TimeflowShortcutInfo.cs
+  uploadId: 834778
