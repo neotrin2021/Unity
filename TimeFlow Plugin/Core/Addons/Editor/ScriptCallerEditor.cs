@@ -175,14 +175,20 @@ namespace AxonGenesis
 
             foreach (Component comp in componentsToSearch) {
                 System.Type type = comp.GetType();
-                MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+                MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
                 foreach (MethodInfo method in methods) {
-                    // Skip Unity built-in methods
+                    // Skip Unity built-in component types
                     if (method.DeclaringType == typeof(Component) ||
                         method.DeclaringType == typeof(MonoBehaviour) ||
                         method.DeclaringType == typeof(Behaviour) ||
+                        method.DeclaringType == typeof(Transform) ||
                         method.DeclaringType == typeof(UnityEngine.Object)) {
+                        continue;
+                    }
+
+                    // Skip TimeFlow built-in types
+                    if (method.DeclaringType.Namespace != null && method.DeclaringType.Namespace.StartsWith("AxonGenesis")) {
                         continue;
                     }
 
@@ -218,12 +224,14 @@ namespace AxonGenesis
 
         private string GetComponentName(List<Component> components, MethodInfo method)
         {
+            // Check which component declares this method
             foreach (Component comp in components) {
-                if (comp.GetType().GetMethod(method.Name, BindingFlags.Public | BindingFlags.Instance) != null) {
+                if (method.DeclaringType.IsAssignableFrom(comp.GetType())) {
                     return comp.GetType().Name;
                 }
             }
-            return "Unknown";
+            // Fallback to declaring type name
+            return method.DeclaringType.Name;
         }
 
         private void AutoDetectParameterType(ScriptCaller caller, MethodInfo method)
