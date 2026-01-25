@@ -15,7 +15,8 @@ public class InstanceMaterial : MonoBehaviour
     // Shader property IDs (cached for performance)
     private static readonly int ColorID = Shader.PropertyToID("_Color");
     private static readonly int BaseColorID = Shader.PropertyToID("_BaseColor");
-    private static readonly int EmissionColorID = Shader.PropertyToID("_EmissionColor");
+    private static readonly int EmissionColorID = Shader.PropertyToID("_EmissionColor");  // Standard/URP
+    private static readonly int EmissiveColorID = Shader.PropertyToID("_EmissiveColor");  // HDRP
 
     public Color Color
     {
@@ -88,15 +89,10 @@ public class InstanceMaterial : MonoBehaviour
         _propertyBlock.SetColor(ColorID, _color);
         _propertyBlock.SetColor(BaseColorID, _color);
 
-        // Set emission
-        if (_enableEmission)
-        {
-            _propertyBlock.SetColor(EmissionColorID, _emissionColor);
-        }
-        else
-        {
-            _propertyBlock.SetColor(EmissionColorID, Color.black);
-        }
+        // Set emission (both Standard/URP and HDRP property names)
+        Color emissive = _enableEmission ? _emissionColor : Color.black;
+        _propertyBlock.SetColor(EmissionColorID, emissive);   // Standard/URP
+        _propertyBlock.SetColor(EmissiveColorID, emissive);   // HDRP
 
         _renderer.SetPropertyBlock(_propertyBlock);
     }
