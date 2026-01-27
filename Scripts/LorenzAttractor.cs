@@ -50,6 +50,16 @@ public class LorenzAttractor : MonoBehaviour
     [Tooltip("Rotation speed in degrees per second")]
     [SerializeField] private Vector3 _rotationSpeed = new Vector3(0f, 10f, 0f);
 
+    [Header("Color (HDR for Bloom)")]
+    [Tooltip("Color at the trail head (current drawing position)")]
+    [SerializeField] [ColorUsage(true, true)] private Color _laserColor = Color.green * 2f;
+
+    [Tooltip("Color at the trail tail (faded end)")]
+    [SerializeField] [ColorUsage(true, true)] private Color _fadeColor = new Color(0f, 0.5f, 0f, 0f);
+
+    [Tooltip("Width of the laser trail")]
+    [SerializeField] [Range(0.001f, 1f)] private float _trailWidth = 0.05f;
+
     [Header("Audio Reactive (Optional)")]
     [Tooltip("Optional - link to TransientSample or AudioSample to modulate speed")]
     [SerializeField] private Component _audioSource;
@@ -123,6 +133,39 @@ public class LorenzAttractor : MonoBehaviour
         set => _audioSpeedInfluence = value;
     }
 
+    /// <summary>Laser color at trail head (HDR). Animatable via TimeFlow.</summary>
+    public Color LaserColor
+    {
+        get => _laserColor;
+        set
+        {
+            _laserColor = value;
+            ApplyColors();
+        }
+    }
+
+    /// <summary>Fade color at trail tail (HDR). Animatable via TimeFlow.</summary>
+    public Color FadeColor
+    {
+        get => _fadeColor;
+        set
+        {
+            _fadeColor = value;
+            ApplyColors();
+        }
+    }
+
+    /// <summary>Trail width. Animatable via TimeFlow.</summary>
+    public float TrailWidth
+    {
+        get => _trailWidth;
+        set
+        {
+            _trailWidth = value;
+            ApplyWidth();
+        }
+    }
+
     #endregion
 
     private void OnEnable()
@@ -130,11 +173,45 @@ public class LorenzAttractor : MonoBehaviour
         _trailRenderer = GetComponent<TrailRenderer>();
         ResetAttractor();
         CacheAudioProperty();
+        ApplyColors();
+        ApplyWidth();
     }
 
     private void OnValidate()
     {
         CacheAudioProperty();
+
+        // Apply color/width changes in editor
+        if (_trailRenderer == null)
+            _trailRenderer = GetComponent<TrailRenderer>();
+
+        ApplyColors();
+        ApplyWidth();
+    }
+
+    private void ApplyColors()
+    {
+        if (_trailRenderer == null)
+            return;
+
+        _trailRenderer.startColor = _laserColor;
+        _trailRenderer.endColor = _fadeColor;
+
+        // Also set material emission if it has one
+        if (_trailRenderer.material != null)
+        {
+            _trailRenderer.material.SetColor("_EmissionColor", _laserColor);
+            _trailRenderer.material.SetColor("_EmissiveColor", _laserColor); // HDRP
+        }
+    }
+
+    private void ApplyWidth()
+    {
+        if (_trailRenderer == null)
+            return;
+
+        _trailRenderer.startWidth = _trailWidth;
+        _trailRenderer.endWidth = _trailWidth * 0.5f; // Taper slightly
     }
 
     private void Update()
