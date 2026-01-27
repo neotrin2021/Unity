@@ -65,6 +65,66 @@ public class LorenzAttractor : MonoBehaviour
     // Center offset (Lorenz attractor is centered around 0,0,~25)
     private Vector3 _centerOffset = new Vector3(0f, 0f, -25f);
 
+    #region Public Properties (for TimeFlow / Animation)
+
+    /// <summary>Speed of the simulation. Animatable via TimeFlow.</summary>
+    public float Speed
+    {
+        get => _speed;
+        set => _speed = value;
+    }
+
+    /// <summary>Scale of the attractor in world space. Animatable via TimeFlow.</summary>
+    public float Scale
+    {
+        get => _scale;
+        set => _scale = value;
+    }
+
+    /// <summary>Sigma (σ) parameter. Classic: 10. Animatable via TimeFlow.</summary>
+    public float Sigma
+    {
+        get => _sigma;
+        set => _sigma = value;
+    }
+
+    /// <summary>Rho (ρ) parameter. Classic: 28. Animatable via TimeFlow.</summary>
+    public float Rho
+    {
+        get => _rho;
+        set => _rho = value;
+    }
+
+    /// <summary>Beta (β) parameter. Classic: 2.667. Animatable via TimeFlow.</summary>
+    public float Beta
+    {
+        get => _beta;
+        set => _beta = value;
+    }
+
+    /// <summary>Steps per frame (drawing speed). Animatable via TimeFlow.</summary>
+    public int StepsPerFrame
+    {
+        get => _stepsPerFrame;
+        set => _stepsPerFrame = Mathf.Clamp(value, 1, 50);
+    }
+
+    /// <summary>Rotation speed in degrees/sec. Animatable via TimeFlow.</summary>
+    public Vector3 RotationSpeed
+    {
+        get => _rotationSpeed;
+        set => _rotationSpeed = value;
+    }
+
+    /// <summary>How much audio affects speed. Animatable via TimeFlow.</summary>
+    public float AudioSpeedInfluence
+    {
+        get => _audioSpeedInfluence;
+        set => _audioSpeedInfluence = value;
+    }
+
+    #endregion
+
     private void OnEnable()
     {
         _trailRenderer = GetComponent<TrailRenderer>();
